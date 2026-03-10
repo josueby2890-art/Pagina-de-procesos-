@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sistema de Gestion por Procesos 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#f4f6fa;--surface:#fff;--border:rgba(0,0,0,0.08);
+  --text:#111827;--muted:#6b7280;
+  --orange:#e07b00;--green:#3ec87a;--blue:#2eb8e6;--lime:#8dc63f;--navy:#2c3e6b;
+  --fh:'Syne',sans-serif;--fb:'DM Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg)!important;font-family:var(--fb);font-size:14px;line-height:1.6;color:var(--text);min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(rgba(0,0,0,0.04) 1px,transparent 1px);background-size:26px 26px;pointer-events:none;z-index:0}
+.scprog{position:fixed;top:0;left:0;height:3px;z-index:300;width:0%;background:linear-gradient(90deg,var(--orange),var(--green),var(--blue),var(--lime));transition:width .1s linear}
+.snav{position:sticky;top:0;z-index:200;background:rgba(255,255,255,0.93);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);box-shadow:0 2px 16px rgba(0,0,0,0.07);transform:translateY(-110%);transition:transform .35s ease}
+.snav.on{transform:translateY(0)}
+.snav-inner{max-width:100%;padding:0 14px;display:flex;gap:2px;align-items:center;overflow-x:auto;scrollbar-width:none}
+.snav-inner::-webkit-scrollbar{display:none}
+.snav a{font-family:var(--fh);font-size:11px;font-weight:700;padding:13px 11px;text-decoration:none;color:var(--muted);white-space:nowrap;border-bottom:3px solid transparent;transition:color .2s,border-color .2s;letter-spacing:.03em}
+.snav a:hover,.snav a.act{border-color:var(--orange);color:var(--orange)}
+.wrap{position:relative;z-index:1;max-width:100%;padding:20px 14px 60px}
+.fi{opacity:0;transform:translateY(22px);transition:opacity .55s ease,transform .55s ease}
+.fi.on{opacity:1;transform:translateY(0)}
+.fi:nth-child(2){transition-delay:.07s}.fi:nth-child(3){transition-delay:.14s}
+.fi:nth-child(4){transition-delay:.21s}.fi:nth-child(5){transition-delay:.28s}
+/* HEADER */
+.hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:28px;padding-bottom:20px;border-bottom:2px solid var(--border)}
+.badge{display:inline-flex;align-items:center;gap:6px;font-family:var(--fh);font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--orange);background:rgba(224,123,0,0.09);border:1px solid rgba(224,123,0,0.25);padding:4px 12px;border-radius:2px;margin-bottom:12px}
+.badge::before{content:'';width:6px;height:6px;background:var(--orange);border-radius:50%;animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+h1{font-family:var(--fh);font-size:clamp(20px,3vw,32px);font-weight:800;letter-spacing:-.02em;line-height:1.05;margin-bottom:8px}
+h1 em{font-style:normal;color:var(--orange)}
+.sub{color:var(--muted);font-size:13px;max-width:500px}
+.kpis{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start}
+.kpi{background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 5px rgba(0,0,0,0.06);padding:12px 18px;border-radius:8px;display:flex;flex-direction:column;gap:1px;min-width:110px;transition:box-shadow .2s,transform .2s}
+.kpi:hover{box-shadow:0 5px 14px rgba(0,0,0,0.1);transform:translateY(-3px)}
+.kpi .n{font-family:var(--fh);font-size:24px;font-weight:800;line-height:1}
+.kpi .l{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+/* PROGRESS */
+.prog-bar-wrap{margin-bottom:28px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px}
+.prog-title{font-family:var(--fh);font-size:13px;font-weight:800;margin-bottom:4px}
+.prog-sub{font-size:11.5px;color:var(--muted);margin-bottom:14px}
+.prog-track{height:14px;background:#e9edf5;border-radius:8px;overflow:hidden;margin-bottom:8px}
+.prog-fill{height:100%;border-radius:8px;width:0%;transition:width 1.4s cubic-bezier(.4,0,.2,1);background:linear-gradient(90deg,var(--green),var(--lime))}
+.prog-stats{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+.prog-stats span{font-family:var(--fh);font-weight:700;font-size:12px}
+/* SEC LABEL */
+.sec{font-family:var(--fh);font-size:10.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:10px;margin-bottom:20px;scroll-margin-top:60px}
+.sec::after{content:'';flex:1;height:1px;background:var(--border)}
+/* TRES CONCEPTOS */
+.tres-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-bottom:16px;border-radius:12px;overflow:hidden;box-shadow:0 2px 14px rgba(0,0,0,0.08)}
+.tres-card{padding:24px 22px 20px;color:#fff;display:flex;flex-direction:column;align-items:center;text-align:center}
+.tres-card.tc-green{background:var(--green)}
+.tres-card.tc-lime{background:var(--lime)}
+.tres-card.tc-blue{background:var(--blue)}
+.tres-equation{font-family:var(--fh);font-size:15px;font-weight:800;margin-bottom:10px;line-height:1.2}
+.tres-desc{font-size:12px;opacity:.9;line-height:1.55;margin-bottom:14px}
+.tres-result{font-size:11.5px;font-weight:600;opacity:.85;padding-top:12px;border-top:1px solid rgba(255,255,255,0.25);line-height:1.4;width:100%}
+.regla-oro{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--orange);border-radius:8px;padding:14px 18px;font-size:12.5px;line-height:1.6;color:var(--muted);margin-bottom:40px}
+.regla-oro strong{color:var(--text)}
+/* TIPOS */
+.tipos-wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+.tipo-card{border-radius:10px;padding:16px 14px;color:#fff;transition:transform .2s,box-shadow .2s}
+.tipo-card:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,0,0,.15)}
+.tipo-card.t1{background:var(--green)}.tipo-card.t2{background:var(--lime)}
+.tipo-card.t3{background:#9b59d0}.tipo-card.t4{background:var(--blue)}
+.tipo-num{font-family:var(--fh);font-size:28px;font-weight:800;opacity:.25;line-height:1;margin-bottom:4px}
+.tipo-name{font-family:var(--fh);font-size:13px;font-weight:800;margin-bottom:8px}
+.tipo-desc{font-size:11.5px;opacity:.9;line-height:1.4}
+.tipos-note{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:40px;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:8px}
+/* CAPACIDADES */
+.cap-tabs{display:flex;gap:6px;margin-bottom:16px}
+.cap-tab{font-family:var(--fh);font-size:11px;font-weight:700;padding:7px 16px;border-radius:20px;border:1px solid var(--border);cursor:pointer;background:var(--surface);color:var(--muted);transition:all .2s}
+.cap-tab.act{background:var(--navy);color:#fff;border-color:var(--navy)}
+.cap-panel{display:none}.cap-panel.act{display:block}
+.cap-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;box-shadow:0 2px 10px rgba(0,0,0,.06);margin-bottom:28px}
+.cap-group-title{font-family:var(--fh);font-size:11px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.cap-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:20px}
+.cap-card{border-radius:8px;padding:14px;color:#fff;font-size:12px;font-weight:500;line-height:1.4;transition:transform .2s,box-shadow .2s}
+.cap-card:hover{transform:translateY(-3px);box-shadow:0 6px 18px rgba(0,0,0,.15)}
+.cap-card.cc-diff{background:var(--navy)}.cap-card.cc-hab{background:#3d5a99}
+.cap-card strong{display:block;font-family:var(--fh);font-size:10px;letter-spacing:.1em;text-transform:uppercase;opacity:.7;margin-bottom:4px}
+/* MAPA */
+.mapa-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;box-shadow:0 2px 12px rgba(0,0,0,.06);margin-bottom:40px}
+.mapa-group{margin-bottom:22px}
+.mapa-group-label{font-family:var(--fh);font-size:11px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;text-align:center;padding:8px 0;border-radius:6px;margin-bottom:12px;color:#b45309;background:rgba(180,83,9,0.07);border:1px solid rgba(224,123,0,0.2)}
+.mapa-cards{display:grid;gap:10px}
+.mapa-cards.mc3{grid-template-columns:repeat(3,1fr)}.mapa-cards.mc4{grid-template-columns:repeat(4,1fr)}
+.mapa-card{background:var(--orange);border-radius:8px;padding:14px 12px;color:#fff;font-family:var(--fh);font-size:12px;font-weight:700;line-height:1.35;text-align:center;transition:transform .2s,box-shadow .2s}
+.mapa-card:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(224,123,0,.35)}
+.mapa-card .mc-num{font-size:10px;font-weight:600;opacity:.75;margin-bottom:3px}
+.mapa-divider{height:1px;background:var(--border);margin:20px 0}
+/* POWER BI */
+.pbi-section{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.06);margin-bottom:40px}
+.pbi-header{background:linear-gradient(135deg,#117DBA,#0D5E8E);padding:16px 20px;display:flex;align-items:center;gap:12px}
+.pbi-logo{width:28px;height:28px;background:#f2c94c;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#0D5E8E;flex-shrink:0}
+.pbi-htitle{font-family:var(--fh);font-size:14px;font-weight:800;color:#fff}
+.pbi-hsub{font-size:11px;color:rgba(255,255,255,.7)}
+.pbi-body iframe{width:100%;height:600px;border:none;display:block}
+/* KANBAN */
+.kanban-wrap{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:40px}
+.kanban-col{border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.kanban-done{background:rgba(62,200,122,0.06);border:1px solid rgba(62,200,122,0.2)}
+.kanban-on{background:rgba(46,184,230,0.06);border:1px solid rgba(46,184,230,0.2)}
+.kanban-pend{background:rgba(0,0,0,0.02);border:1px solid var(--border)}
+.kanban-head{font-family:var(--fh);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;display:flex;align-items:center;justify-content:space-between;padding-bottom:8px;border-bottom:2px solid rgba(0,0,0,0.07);margin-bottom:4px}
+.kanban-done .kanban-head{color:#1a7a45}.kanban-on .kanban-head{color:#0d6e94}.kanban-pend .kanban-head{color:var(--muted)}
+.kanban-count{font-family:var(--fh);font-size:13px;font-weight:800;background:rgba(0,0,0,0.06);border-radius:20px;padding:1px 8px}
+.kcard{background:var(--surface);border-radius:7px;padding:9px 11px;border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.05);transition:box-shadow .18s,transform .18s}
+.kcard:hover{box-shadow:0 4px 12px rgba(0,0,0,.1);transform:translateY(-2px)}
+.kcard-area{font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--orange);margin-bottom:3px}
+.kcard-name{font-size:12px;font-weight:500;line-height:1.35;margin-bottom:4px}
+.kcard-who{font-size:10.5px;color:var(--muted)}
+footer{text-align:center;padding:20px 0;font-size:11px;color:var(--muted);border-top:1px solid var(--border);margin-top:20px}
+@media(max-width:700px){
+  .tres-grid,.tipos-wrap,.mapa-cards.mc3,.mapa-cards.mc4{grid-template-columns:1fr 1fr}
+  .kanban-wrap{grid-template-columns:1fr}
+}
+@media(max-width:480px){
+  .tres-grid,.tipos-wrap,.mapa-cards.mc3,.mapa-cards.mc4{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="scprog" id="scprog"></div>
+<nav class="snav" id="snav">
+  <div class="snav-inner">
+    <a href="#sec-conceptos">&#128161; Conceptos</a>
+    <a href="#sec-tipos">&#128202; Tipos</a>
+    <a href="#sec-capacidades">&#9917; Capacidades</a>
+    <a href="#sec-mapa">&#128279; Mapa</a>
+    <a href="#sec-pbi">&#128200; Power BI</a>
+    <a href="#sec-estado">&#9989; Estado</a>
+  </div>
+</nav>
+<div class="wrap">
+
+  <header>
+    <div class="hdr fi">
+      <div>
+        <div class="badge">Gestion por Procesos &middot; 2026</div>
+        <h1>Sistema de <em>Gestion</em><br>por Procesos</h1>
+        <p class="sub">Marco conceptual y avance del proceso de creacion y diseno de los procesos corporativos.</p>
+      </div>
+      <div class="kpis">
+        <div class="kpi fi"><span class="n" style="color:var(--navy)">8</span><span class="l">Capacidades</span></div>
+        <div class="kpi fi"><span class="n" style="color:var(--orange)">10</span><span class="l">Macroprocesos</span></div>
+        <div class="kpi fi"><span class="n" style="color:var(--lime)">87</span><span class="l">Proc. Clave</span></div>
+        <div class="kpi fi"><span class="n" style="color:var(--blue)">30</span><span class="l">Proc. Operativos</span></div>
+      </div>
+    </div>
+    <div class="prog-bar-wrap fi">
+      <div class="prog-title">Avance General de Procesos Clave</div>
+      <div class="prog-sub">26 procesos completados de 87 totales &mdash; Meta: 87/87 para Dic 2026</div>
+      <div class="prog-track"><div class="prog-fill" data-w="30%"></div></div>
+      <div class="prog-stats">
+        <span style="color:var(--green)">26 completados</span>
+        <span>30% del total</span>
+        <span style="color:var(--muted)">61 pendientes</span>
+      </div>
+    </div>
+  </header>
+
+  <p class="sec fi" id="sec-conceptos">&#128161; Tres conceptos clave</p>
+  <div class="tres-grid fi">
+    <div class="tres-card tc-green">
+      <div class="tres-equation">Mejora = Hacerlo mejor</div>
+      <div class="tres-desc">Ajustar o perfeccionar lo que ya existe. Identificar errores, tiempos muertos, pasos innecesarios o formas de simplificar.</div>
+      <div class="tres-result">&#8593; La esencia no cambia, solo se vuelve mas agil y eficiente.</div>
+    </div>
+    <div class="tres-card tc-lime">
+      <div class="tres-equation">Automatizacion = Hacerlo solo</div>
+      <div class="tres-desc">La tecnologia ejecuta las partes repetitivas y rutinarias del proceso sin intervencion manual.</div>
+      <div class="tres-result">&#9889; Ganas velocidad, precision y tiempo para tareas de mayor valor.</div>
+    </div>
+    <div class="tres-card tc-blue">
+      <div class="tres-equation">Innovacion = Hacerlo diferente</div>
+      <div class="tres-desc">Repensar el proceso desde otro angulo e introducir soluciones nuevas, a veces disruptivas.</div>
+      <div class="tres-result">&#128161; No solo mas rapido: lo transformas para generar mas valor.</div>
+    </div>
+  </div>
+  <div class="regla-oro fi">
+    <strong>Regla de oro:</strong> <em>No automatices desperdicio.</em> Primero <strong>mejora</strong>, despues <strong>automatiza</strong>; <strong>innova</strong> cuando el proceso actual ya no da el valor esperado o hay oportunidad 10x.
+  </div>
+
+  <p class="sec fi" id="sec-tipos">&#128202; Tipos de procesos</p>
+  <div class="tipos-wrap fi">
+    <div class="tipo-card t1"><div class="tipo-num">01</div><div class="tipo-name">Macroprocesos</div><div class="tipo-desc">Agrupa un conjunto de procesos clave relacionados que persiguen un objetivo estrategico comun.</div></div>
+    <div class="tipo-card t2"><div class="tipo-num">02</div><div class="tipo-name">Proceso Clave</div><div class="tipo-desc">Proceso dentro de un macroproceso que aporta un valor central y directo al cumplimiento de los objetivos estrategicos.</div></div>
+    <div class="tipo-card t3"><div class="tipo-num">03</div><div class="tipo-name">Proceso Operativo</div><div class="tipo-desc">Conjunto ordenado de actividades que transforman entradas en salidas con valor para un cliente interno o externo.</div></div>
+    <div class="tipo-card t4"><div class="tipo-num">04</div><div class="tipo-name">Subproceso</div><div class="tipo-desc">Division mas detallada de un proceso que facilita su gestion y ejecucion en etapas especificas.</div></div>
+  </div>
+  <div class="tipos-note fi">Un <strong>macroproceso</strong> agrupa varios procesos clave de valor estrategico; cada <strong>proceso clave</strong> esta formado por procesos operativos con un proposito especifico, y estos se descomponen en <strong>subprocesos</strong> para facilitar su gestion.</div>
+
+  <p class="sec fi" id="sec-capacidades">&#9917; Capacidades organizacionales</p>
+  <div class="cap-wrap fi">
+    <div style="margin-bottom:14px;font-size:12.5px;color:var(--muted);line-height:1.65">Las <strong style="color:var(--text)">capacidades organizacionales</strong> son habilidades sistemicas que la organizacion desarrolla para lograr resultados estrategicos. No son personas, ni herramientas, ni procesos individuales: son <em>el resultado coordinado de todo eso junto</em>.</div>
+    <div class="cap-tabs">
+      <div class="cap-tab act" onclick="switchCap(this,'cap-nivel1')">Nivel 0 &mdash; Capacidades</div>
+      <div class="cap-tab" onclick="switchCap(this,'cap-nivel0')">Nivel 1 &mdash; Macroprocesos</div>
+    </div>
+    <div class="cap-panel act" id="cap-nivel1">
+      <div class="cap-group-title">Capacidades Diferenciadoras</div>
+      <div class="cap-grid">
+        <div class="cap-card cc-diff"><strong>Cap. 1</strong>Conocimiento del Mercado y Desarrollo de Productos</div>
+        <div class="cap-card cc-diff"><strong>Cap. 2</strong>Desarrollo de instrumentos financieros y gestion de Inversionistas</div>
+        <div class="cap-card cc-diff"><strong>Cap. 3</strong>Planeacion y gestion de proyectos eficientes y de calidad</div>
+        <div class="cap-card cc-diff"><strong>Cap. 4</strong>Generacion de Experiencia del cliente externo IB</div>
+      </div>
+      <div class="cap-group-title">Capacidades Habilitadoras</div>
+      <div class="cap-grid">
+        <div class="cap-card cc-hab"><strong>Cap. 5</strong>Gestion integral de talento</div>
+        <div class="cap-card cc-hab"><strong>Cap. 6</strong>Gestion Eficiente de la Organizacion (Procesos, Tecnologia y Abastecimiento)</div>
+        <div class="cap-card cc-hab"><strong>Cap. 7</strong>Seleccion y gestion de proveedores</div>
+        <div class="cap-card cc-hab"><strong>Cap. 8</strong>Gestion de Relaciones Institucionales</div>
+      </div>
+    </div>
+    <div class="cap-panel" id="cap-nivel0">
+      <div class="cap-group-title">Macroprocesos Estrategicos</div>
+      <div class="cap-grid">
+        <div class="cap-card" style="background:#e07b00"><strong>MP 1</strong>Planificacion Estrategica</div>
+        <div class="cap-card" style="background:#e07b00"><strong>MP 2</strong>Gestion de Sostenibilidad</div>
+        <div class="cap-card" style="background:#e07b00"><strong>MP 3</strong>Alineacion Estrategica de la Cultura</div>
+      </div>
+      <div class="cap-group-title">Macroprocesos Misionales</div>
+      <div class="cap-grid">
+        <div class="cap-card" style="background:#c26b00"><strong>MP 4</strong>Gestion de Inteligencia de Mercado y Desarrollo de Producto</div>
+        <div class="cap-card" style="background:#c26b00"><strong>MP 5</strong>Estructuracion Financiera de Proyectos e Impulso de Inversion</div>
+        <div class="cap-card" style="background:#c26b00"><strong>MP 6</strong>Gestion de Proyectos Habitacionales y Rentista</div>
+        <div class="cap-card" style="background:#c26b00"><strong>MP 7</strong>Gestion Integral de la Experiencia del Cliente</div>
+      </div>
+      <div class="cap-group-title">Macroprocesos de Soporte</div>
+      <div class="cap-grid">
+        <div class="cap-card" style="background:#a05500"><strong>MP 8</strong>Eficiencia Operativa</div>
+        <div class="cap-card" style="background:#a05500"><strong>MP 9</strong>Gestion Integral de Talento</div>
+        <div class="cap-card" style="background:#a05500"><strong>MP 10</strong>Gestion de Desempeno Organizacional y Conocimiento (MC)</div>
+      </div>
+    </div>
+  </div>
+
+  <p class="sec fi" id="sec-mapa">&#128279; Mapa de macroprocesos</p>
+  <div class="mapa-wrap fi">
+    <div class="mapa-group">
+      <div class="mapa-group-label">Macroprocesos Estrategicos</div>
+      <div class="mapa-cards mc3">
+        <div class="mapa-card"><div class="mc-num">MP 1</div>Planificacion Estrategica</div>
+        <div class="mapa-card"><div class="mc-num">MP 2</div>Gestion de Sostenibilidad</div>
+        <div class="mapa-card"><div class="mc-num">MP 3</div>Alineacion Estrategica de la Cultura</div>
+      </div>
+    </div>
+    <div class="mapa-divider"></div>
+    <div class="mapa-group">
+      <div class="mapa-group-label">Macroprocesos Misionales</div>
+      <div class="mapa-cards mc4">
+        <div class="mapa-card"><div class="mc-num">MP 4</div>Gestion de Inteligencia de Mercado y Desarrollo de Producto</div>
+        <div class="mapa-card"><div class="mc-num">MP 5</div>Estructuracion Financiera de Proyectos e Impulso de Inversion</div>
+        <div class="mapa-card"><div class="mc-num">MP 6</div>Gestion de Proyectos Habitacionales y Rentista</div>
+        <div class="mapa-card"><div class="mc-num">MP 7</div>Gestion Integral de la Experiencia del Cliente</div>
+      </div>
+    </div>
+    <div class="mapa-divider"></div>
+    <div class="mapa-group" style="margin-bottom:0">
+      <div class="mapa-group-label">Macroprocesos de Soporte</div>
+      <div class="mapa-cards mc3">
+        <div class="mapa-card"><div class="mc-num">MP 8</div>Eficiencia Operativa</div>
+        <div class="mapa-card"><div class="mc-num">MP 9</div>Gestion Integral de Talento</div>
+        <div class="mapa-card"><div class="mc-num">MP 10</div>Gestion de Desempeno Organizacional y Conocimiento (MC)</div>
+      </div>
+    </div>
+  </div>
+
+  <p class="sec fi" id="sec-pbi">&#128200; Dashboard de avance &mdash; Power BI</p>
+  <div class="pbi-section fi">
+    <div class="pbi-header">
+      <div class="pbi-logo">PBI</div>
+      <div>
+        <div class="pbi-htitle">Avance de Procesos &mdash; Power BI</div>
+        <div class="pbi-hsub">Dashboard actualizado en tiempo real</div>
+      </div>
+    </div>
+    <div class="pbi-body">
+      <iframe src="https://app.powerbi.com/reportEmbed?reportId=f69b1e40-d8eb-4f45-8fa3-65a107b62338&autoAuth=true&ctid=7ff3b017-2a5b-4042-a2ed-955c6838ef29" allowfullscreen></iframe>
+    </div>
+  </div>
+
+  <p class="sec fi" id="sec-estado">&#9989; Estado actual de procesos clave</p>
+  <div class="kanban-wrap fi">
+    <div class="kanban-col kanban-done">
+      <div class="kanban-head">&#9989; Completados <span class="kanban-count">4</span></div>
+      <div class="kcard"><div class="kcard-area">Nuevos Negocios</div><div class="kcard-name">Gestion de Cobros</div><div class="kcard-who">Miguel Marroquin &middot; Feb 2026</div></div>
+      <div class="kcard"><div class="kcard-area">Conocimiento</div><div class="kcard-name">Gestion del Conocimiento Documentado</div><div class="kcard-who">Judith Rivas &middot; Feb 2026</div></div>
+      <div class="kcard"><div class="kcard-area">Desempeno</div><div class="kcard-name">Gestion de Indicadores de Desempeno</div><div class="kcard-who">Judith Rivas &middot; Feb 2026</div></div>
+      <div class="kcard"><div class="kcard-area">Talento Humano</div><div class="kcard-name">Onboarding e Integracion</div><div class="kcard-who">Cecilia de Jovel &middot; Feb 2026</div></div>
+    </div>
+    <div class="kanban-col kanban-on">
+      <div class="kanban-head">&#128260; En Proceso <span class="kanban-count">3</span></div>
+      <div class="kcard"><div class="kcard-area">Finanzas</div><div class="kcard-name">Gestion financiera y de recursos</div><div class="kcard-who">Miguel Marroquin &middot; Mar 2026</div></div>
+      <div class="kcard"><div class="kcard-area">Activos Rentistas</div><div class="kcard-name">Control operativo de gastos rentista</div><div class="kcard-who">Alejandro Portal &middot; Mar 2026</div></div>
+      <div class="kcard"><div class="kcard-area">Talento Humano</div><div class="kcard-name">Atraccion, Reclutamiento y Seleccion</div><div class="kcard-who">Cecilia de Jovel &middot; Mar 2026</div></div>
+    </div>
+    <div class="kanban-col kanban-pend">
+      <div class="kanban-head">&#128197; Proximos <span class="kanban-count">80</span></div>
+      <div class="kcard"><div class="kcard-area">Nuevos Negocios &middot; Mar</div><div class="kcard-name">Mystery Shopping</div><div class="kcard-who">Judith Rivas</div></div>
+      <div class="kcard"><div class="kcard-area">Operaciones &middot; Mar</div><div class="kcard-name">Preventa</div><div class="kcard-who">Hector Delgado</div></div>
+      <div class="kcard"><div class="kcard-area">Finanzas &middot; Mar</div><div class="kcard-name">Resultados y Reporteria (P&amp;L)</div><div class="kcard-who">Alejandro Portal</div></div>
+      <div class="kcard"><div class="kcard-area">Ventas &middot; Abr</div><div class="kcard-name">Gestion de Ventas</div><div class="kcard-who">Hector Delgado</div></div>
+      <div class="kcard"><div class="kcard-area">Finanzas &middot; Abr</div><div class="kcard-name">Facturacion e Ingresos</div><div class="kcard-who">Miguel Marroquin</div></div>
+      <div class="kcard"><div class="kcard-area">Talento Humano &middot; Abr</div><div class="kcard-name">Gestion del Desempeno Individual</div><div class="kcard-who">Cecilia de Jovel</div></div>
+      <div style="font-size:11px;color:var(--muted);text-align:center;padding:8px 0">+ 74 procesos programados May&ndash;Jun 2026</div>
+    </div>
+  </div>
+
+  <footer>Tecnologia &amp; Eficiencia &mdash; Sistema de Gestion por Procesos &middot; 2026</footer>
+</div>
+
+<script>
+(function(){
+  var prog=document.getElementById('scprog'),snav=document.getElementById('snav');
+  window.addEventListener('scroll',function(){
+    prog.style.width=(window.scrollY/(document.body.scrollHeight-window.innerHeight)*100)+'%';
+    if(window.scrollY>180)snav.classList.add('on');else snav.classList.remove('on');
+    document.querySelectorAll('.snav a').forEach(function(a){
+      var s=document.querySelector(a.getAttribute('href'));
+      if(s){var r=s.getBoundingClientRect();if(r.top<=80&&r.bottom>0)a.classList.add('act');else a.classList.remove('act');}
+    });
+  });
+  if('IntersectionObserver' in window){
+    var obs=new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(e.isIntersecting){
+          e.target.classList.add('on');
+          e.target.querySelectorAll('.prog-fill[data-w]').forEach(function(b){b.style.width=b.getAttribute('data-w');});
+          obs.unobserve(e.target);
+        }
+      });
+    },{threshold:0.12});
+    document.querySelectorAll('.fi').forEach(function(el){obs.observe(el);});
+  } else {
+    document.querySelectorAll('.fi').forEach(function(el){el.classList.add('on');});
+    document.querySelectorAll('.prog-fill[data-w]').forEach(function(b){b.style.width=b.getAttribute('data-w');});
+  }
+})();
+function switchCap(tab,panelId){
+  document.querySelectorAll('.cap-tab').forEach(function(t){t.classList.remove('act');});
+  document.querySelectorAll('.cap-panel').forEach(function(p){p.classList.remove('act');});
+  tab.classList.add('act');
+  document.getElementById(panelId).classList.add('act');
+}
+</script>
+</body>
+</html>
